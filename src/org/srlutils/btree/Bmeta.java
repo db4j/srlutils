@@ -365,24 +365,6 @@ public abstract class Bmeta<CC extends Bmeta.Context<KK,VV,CC>,KK,VV,EE extends 
     protected Range range() { return new Range(); }
 
     
-    /** find the index of the first key in the page >= key - stepped linear search */
-    public int findIndex2(Sheet page,int mode,CC context) {
-        boolean greater = modes.greater( mode );
-        int step = 16;
-        int k1 = 0, num = page.numkeys(), cmp = -1, k2 = 0;
-        for (k1=0; k1<num; k2 = k1, k1+=step) {
-            cmp = compare( page, k1, context );
-            if (greater & cmp==0) cmp = 1;
-            if (cmp <= 0) break;
-        }
-        for (k1=k2; k1<num; k1++) {
-            cmp = compare( page, k1, context );
-            if (greater & cmp==0) cmp = 1;
-            if (cmp <= 0) break;
-        }
-        context.match = cmp==0;
-        return k1;
-    }
     
     
     public static class DF extends Bmeta<DF.Data,Double,Float,Btypes.ValsDouble> 
