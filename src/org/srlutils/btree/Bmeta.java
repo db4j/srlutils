@@ -4,8 +4,6 @@ package org.srlutils.btree;
 
 import java.util.ArrayList;
 import org.srlutils.Simple;
-import org.srlutils.Util;
-import org.srlutils.btree.TestDF.Tester;
 import org.srlutils.btree.TestDF.DFcontext;
 import org.srlutils.btree.Bpage.Sheet;
 import org.srlutils.btree.Btypes.Element;
@@ -31,7 +29,7 @@ public abstract class Bmeta<CC extends Bmeta.Context<KK,VV,CC>,KK,VV,EE extends 
         init(keys.size(),vals.size());
     }
     
-    
+
     public static class Context<KK,VV,CC extends Context<KK,VV,CC>> extends Btree.Context {
         public KK key;
         public VV val;
@@ -337,7 +335,6 @@ public abstract class Bmeta<CC extends Bmeta.Context<KK,VV,CC>,KK,VV,EE extends 
         findData(context);
         return context.match ? context.val : null;
     }
-    
     public class Range extends Btree.Range<CC> {
         public Range() { super(Bmeta.this); }
         public ArrayList<KK> keys() {
@@ -347,7 +344,8 @@ public abstract class Bmeta<CC extends Bmeta.Context<KK,VV,CC>,KK,VV,EE extends 
         }
         public ArrayList<VV> vals() {
             ArrayList<VV> vals = new ArrayList();
-            while (next()) vals.add(cc.val);
+            while (next())
+                vals.add(cc.val);
             return vals;
         }
     }
