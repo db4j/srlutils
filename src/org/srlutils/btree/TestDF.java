@@ -270,7 +270,7 @@ public class TestDF {
             public void getcc(Sheet page,Data cc,int ko) { cc.key=page.geti(pkey,ko); cc.val=page.getf(pval,ko); }
             int key(Sheet page,int index) { return page.geti(pkey,index); }
             public int compare(Sheet page,int index,Data data) { return Butil.compare(data.key,key(page,index)); }
-            int findLoop(Sheet page,int k1,int num,int step,Data context,boolean greater) {
+            protected int findLoop(Sheet page,int k1,int num,int step,Data context,boolean greater) {
                 for (; k1<num; k1+=step) {
                     int cmp = compare( page, k1, context );
                     if (greater & cmp==0) cmp = 1;
@@ -288,7 +288,7 @@ public class TestDF {
             public void getcc(Sheet page,Data cc,int ko) { cc.key=page.geti(pkey,ko); cc.val=page.getf(pval,ko); }
             int key(Sheet page,int index) { return page.geti(pkey,index); }
             public int compare(Sheet page,int index,Data data) { return Butil.compare(data.key,key(page,index)); }
-            int findLoop(Sheet page,int k1,int num,int step,Data context,boolean greater) {
+            protected int findLoop(Sheet page,int k1,int num,int step,Data context,boolean greater) {
                 for (; k1<num; k1+=step) {
                     int cmp = compare( page, k1, context );
                     if (greater & cmp==0) cmp = 1;
@@ -323,7 +323,7 @@ public class TestDF {
             public int compare(Sheet page,int index,Data data) {
                 return Butil.compare(data.key,key(page,index));
             }
-            int findLoop(Sheet page,int k1,int num,int step,Data context,boolean greater) {
+            protected int findLoop(Sheet page,int k1,int num,int step,Data context,boolean greater) {
                 for (; k1<num; k1+=step) {
                     int cmp = compare( page, k1, context );
                     if (greater & cmp==0) cmp = 1;
@@ -349,7 +349,7 @@ public class TestDF {
             public int compare(Sheet page,int index,Data data) {
                 return Butil.compare(data.key,key(page,index));
             }
-            int findLoop(Sheet page,int k1,int num,int step,Data context,boolean greater) {
+            protected int findLoop(Sheet page,int k1,int num,int step,Data context,boolean greater) {
                 for (; k1<num; k1+=step) {
                     int cmp = compare( page, k1, context );
                     if (greater & cmp==0) cmp = 1;
@@ -375,7 +375,7 @@ public class TestDF {
             public int compare(Sheet page,int index,Data data) {
                 return Butil.compare(data.key,key(page,index));
             }
-            int findLoop(Sheet page,int k1,int num,int step,Data context,boolean greater) {
+            protected int findLoop(Sheet page,int k1,int num,int step,Data context,boolean greater) {
                 for (; k1<num; k1+=step) {
                     int cmp = compare( page, k1, context );
                     if (greater & cmp==0) cmp = 1;
@@ -401,7 +401,7 @@ public class TestDF {
             public int compare(Sheet page,int index,Data data) {
                 return Butil.compare(data.key,key(page,index));
             }
-            int findLoop(Sheet page,int k1,int num,int step,Data context,boolean greater) {
+            protected int findLoop(Sheet page,int k1,int num,int step,Data context,boolean greater) {
                 for (; k1<num; k1+=step) {
                     int cmp = compare( page, k1, context );
                     if (greater & cmp==0) cmp = 1;
@@ -427,7 +427,7 @@ public class TestDF {
             public int compare(Sheet page,int index,Data data) {
                 return Butil.compare(data.key,key(page,index));
             }
-            int findLoop(Sheet page,int k1,int num,int step,Data context,boolean greater) {
+            protected int findLoop(Sheet page,int k1,int num,int step,Data context,boolean greater) {
                 for (; k1<num; k1+=step) {
                     int cmp = compare( page, k1, context );
                     if (greater & cmp==0) cmp = 1;
