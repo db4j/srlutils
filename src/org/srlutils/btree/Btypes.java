@@ -214,7 +214,7 @@ public class Btypes {
         }
     }
 
-    public static class Demo<CC extends Btree.Context & DFcontext<CC>,TT extends Bface<CC>> {
+    static class Demo<CC extends Btree.Context & DFcontext<CC>,TT extends Bface<CC>> {
         TT map;
         Demo(TT $map) { map = $map; }
         
@@ -253,12 +253,11 @@ public class Btypes {
             }
             check(0,nn,1,-nn);
         }
-    }
 
-    public static void main(String [] args) throws Exception {
-        if (false) { new Demo(new DF()).test(); return; }
-        BtTests2.auto( null, 1000000, 1, 1, new Tester2(new DF2()), new Tester(new DF()) );
-        BtTests2.auto( null, 1000000, 1, 2, new Tester2(new DF2()), new Tester(new DF()) );
+        public static void main(String [] args) throws Exception {
+            if (false) { new Demo(new DF()).test(); return; }
+            BtTests2.auto( null, 1000000, 1, 1, new Tester2(new DF2()), new Tester(new DF()) );
+            BtTests2.auto( null, 1000000, 1, 2, new Tester2(new DF2()), new Tester(new DF()) );
+        }
     }
-    
 }

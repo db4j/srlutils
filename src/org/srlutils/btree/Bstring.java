@@ -360,7 +360,7 @@ public class Bstring {
         public Cmpr() {}
         public Cmpr(byte[] $bytes,boolean $prefix) { bytes = $bytes; prefix = $prefix; }
     }
-    public static class DF extends Bmeta<DF.Data,String,String,ValsString> {
+    static class DF extends Bmeta<DF.Data,String,String,ValsString> {
         { setup(new ValsString(),new ValsString()); }
         public Data context() { return new Data(); }
         public static class Data extends Bmeta.Context<String,String,Data> implements TestDF.DFcontext<Data> {
@@ -368,14 +368,15 @@ public class Bstring {
             public Data set(double $key,float $val) { key = $key+""; val = $val+""; return this; }
             public float val() { return match ? Float.parseFloat(val) : -1f; }
         }
+
+        public static void main(String [] args) throws Exception {
+            TestDF.main(null);
+            if (true) return;
+            TestDF.auto( null, 1000000, 1, 1, new TestDF.Tester(new DF()) );
+            TestDF.auto( null, 1000000, 1, 3, new TestDF.Tester(new DF()) );
+        }
     }
 
-    public static void main(String [] args) throws Exception {
-        TestDF.main(null);
-        if (true) return;
-        TestDF.auto( null, 1000000, 1, 1, new TestDF.Tester(new DF()) );
-        TestDF.auto( null, 1000000, 1, 3, new TestDF.Tester(new DF()) );
-    }
 }
 
 

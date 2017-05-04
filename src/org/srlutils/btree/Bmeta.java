@@ -365,7 +365,7 @@ public abstract class Bmeta<CC extends Bmeta.Context<KK,VV,CC>,KK,VV,EE extends 
     
     
     
-    public static class DF extends Bmeta<DF.Data,Double,Float,Btypes.ValsDouble> 
+    static class DF extends Bmeta<DF.Data,Double,Float,Btypes.ValsDouble> 
         implements Bface<DF.Data>
     {
         public DF() { setup(new Btypes.ValsDouble(),new Btypes.ValsFloat()); }
@@ -387,7 +387,7 @@ public abstract class Bmeta<CC extends Bmeta.Context<KK,VV,CC>,KK,VV,EE extends 
         public Data context() { return new Data(); }
     }    
 
-    public static class Demo {
+    static class Demo {
         public static void main(String[] args) throws Exception {
             TestDF.auto( null, 1000000, 1, 3, new TestDF.Tester(new DF()) );
             TestDF.auto( null, 1000000, 1, 3, new TestDF.Tester(new DF()) );
