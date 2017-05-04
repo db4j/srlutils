@@ -936,7 +936,7 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
     }
     /** return an array of depth and number of pages */
     public int [] getInfo() { return null; }
-    public String info() {
+    protected String info() {
         int [] info = getInfo();
         return String.format("Btree depth:%d, pages:%d\n", info[0], info[1]);
     }
@@ -978,7 +978,7 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
                 System.out.format("%s    -branch: %s\n", prefix, cc.format(0));
             }
     }
-    static class Tester extends TaskTimer.Runner<Void> {
+    static abstract class Tester extends TaskTimer.Runner<Void> {
         boolean ok;
         { stageNames = "put look rem chk".split(" "); }
         public void alloc() { setup(stageNames.length, "DF"); }
