@@ -58,7 +58,7 @@ public abstract class TestString<CC extends Bmeta.Context<?,?,CC>> {
         public void setcc(Sheet page,Data cc,int ko) { page.put(pkey,ko,cc.key);  page.put(pval,ko,cc.val);  }
         public void getcc(Sheet page,Data cc,int ko) { cc.key=page.geti(pkey,ko); cc.val=page.getl(pval,ko); }
         int key(Sheet page,int index) { return page.geti(pkey,index); }
-        public int compare(Sheet page,int index,Data data) { return Butil.compare(data.key,key(page,index)); }
+        protected int compare(Sheet page,int index,Data data) { return Butil.compare(data.key,key(page,index)); }
         protected int findLoop(Sheet page,int k1,int num,int step,Data context,boolean greater) {
             for (; k1<num; k1+=step) {
                 int cmp = compare( page, k1, context );
