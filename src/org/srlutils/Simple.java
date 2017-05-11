@@ -2,6 +2,7 @@
 
 package org.srlutils;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -144,9 +145,11 @@ public class Simple {
     }
     public static class Reflect {
         /** return a newInstance of the klass -- all exceptions are rethrown as RuntimeExceptions */
-        public static <TT> TT alloc(Class<TT> klass) {
+        public static <TT> TT alloc(Class<TT> klass,boolean setAccess) {
             try {
-                return klass.newInstance();
+                Constructor<TT> ctor = klass.getConstructor();
+                if (setAccess) ctor.setAccessible(true);
+                return ctor.newInstance();
             } catch (Exception ex) {
                 throw new RuntimeException(
                         String.format( "\nattempt to create new instance of %s failed", klass ), ex );
@@ -193,9 +196,9 @@ public class Simple {
             catch (Exception e) { return null; }
         }
         /** get all the fields of klass and any superclasses assignable from filter using reflection */
-        public static Field[] getFields(Class klass,Class filter) {
+        public static Field[] getFields(Class klass,Class superKlass,Class filter) {
             DynArray.Objects<Field> result = new DynArray.Objects().init(Field.class);
-            for (; klass != Object.class; klass = klass.getSuperclass()) {
+            for (; klass != superKlass; klass = klass.getSuperclass()) {
                 Field[] fields = klass.getDeclaredFields();
                 for (Field field : fields) {
                     Class fc = field.getType();
