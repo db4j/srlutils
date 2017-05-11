@@ -192,6 +192,19 @@ public class Simple {
             }
             catch (Exception e) { return null; }
         }
+        /** get all the fields of klass and any superclasses assignable from filter using reflection */
+        public static Field[] getFields(Class klass,Class filter) {
+            DynArray.Objects<Field> result = new DynArray.Objects().init(Field.class);
+            for (; klass != Object.class; klass = klass.getSuperclass()) {
+                Field[] fields = klass.getDeclaredFields();
+                for (Field field : fields) {
+                    Class fc = field.getType();
+                    if (filter.isAssignableFrom( fc )) result.add( field );
+                }
+            }
+            return result.trim();
+        }
+        // fixme - replace fields with getFields, and use varargs for multiple filters
         /** return all the fields in the class, up the super chain */
         public static Field [] fields(Class klass) {
             ArrayList<Field> list = new ArrayList();
