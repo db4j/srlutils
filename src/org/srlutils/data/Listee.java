@@ -34,6 +34,33 @@ public class Listee<TT extends Listee<TT>> {
     /** null out the links to the rest of the list - unsafe, ie the list is not maintained */
     public void cleanup() { next = prev = null; }
 
+    /**
+     * only for circular lists, ie ones created with the static append or equivalent
+     * return the next element in the list or null to indicate the list is terminated
+     * @param base the first element in the list
+     * @return the next element, or null if already the last element
+     */
+    public TT next(TT base) {
+        return next==base ? null : next;
+    }
+    /**
+     * maintain a circular linked list, inserting node before base
+     * @param <TT> the node type
+     * @param base the first element of the list or null to indicate the list is empty
+     * @param node the node to insert
+     * @return the new base, which is unchanged unless base is null
+     */
+    public static <TT extends Listee<TT>> TT append(TT base,TT node) {
+        if (base==null) { node.next = node.prev = node; return node; }
+        TT prev = base.prev;
+        node.next = base;
+        node.prev = prev;
+        prev.next = node;
+        base.prev = node;
+        return base;
+    }
+
+    
     /** the base of a doubly linked list */
     public static class Lister<TT extends Listee<TT>> implements Iterable<TT> {
         // note: check is useful for debugging, but is made final for speed ... remove if needed
@@ -197,9 +224,14 @@ public class Listee<TT extends Listee<TT>> {
                 public Address self() { return Address.this; }
             }
         }
+        public static Phone newPhone(int number) {
+            Phone phone = new Phone();
+            phone.number = number;
+            return phone;
+        }
 
         public void demo() {
-            for (int ii = 0; ii < 10; ii++) { Phone p = new Phone(); p.number = ii; phones.push(p); }
+            for (int ii = 0; ii < 10; ii++) phones.push(newPhone(ii));
             for (int ii = 0; ii < 10; ii++) {
                 Address addy = new Address();
                 addy.blah = "goodbye cruel world " + ii;
@@ -211,7 +243,7 @@ public class Listee<TT extends Listee<TT>> {
             int nt = 1 << 20;
             int [] indices = Util.colon(nt), lin = Util.colon(nt), flip = Util.colon(nt-1,-1,new int[nt]);
             Phone [] array = new Phone[nt];
-            for (int ii = 0; ii < nt; ii++) { array[ii] = new Phone(); array[ii].number = ii; }
+            for (int ii = 0; ii < nt; ii++) array[ii] = newPhone(ii);
             for (int kk = 0; kk<9; kk++)
             for (int jj = 0; jj < 3; jj++) {
                 Lister<Phone> p2 = new Lister();
@@ -261,6 +293,15 @@ public class Listee<TT extends Listee<TT>> {
         return "none";
     }
 
+    /** an example of using Listee directly, ie as a circular linked list managed by static methods */
+    public static class Direct {
+        public static void main(String [] args) {
+            Demo.Phone first = null, phone;
+            for (int ii=0; ii < 10; ii++) first = first.append(first,Demo.newPhone(ii));
+            for (phone = first; phone != null; phone = phone.next(first))
+                System.out.println(phone.number);
+        }
+    }
 
 }
 
