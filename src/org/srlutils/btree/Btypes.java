@@ -14,8 +14,8 @@ public class Btypes {
     public abstract static class Element<EE,CC> implements Serializable {
         public int slot;
         final public boolean dynlen;
-        Element() { dynlen = false; }
-        Element(boolean $dynlen) { dynlen = $dynlen; }
+        protected Element() { dynlen = false; }
+        protected Element(boolean $dynlen) { dynlen = $dynlen; }
         public void config(int aslot) { slot = aslot; }
 
         public int size(EE val,Object data) { return size(); }
