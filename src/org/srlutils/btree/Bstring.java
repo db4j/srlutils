@@ -319,7 +319,9 @@ public class Bstring {
             int len2 = len(bits);
             int off = off(bits);
             byte [] b1 = cmpr.bytes;
-            return Sheet.compare(b1,0,b1.length,page.buf,off,len2);
+            int min = Math.min(b1.length,len2);
+            int cmp = Sheet.compare(b1,0,min,page.buf,off,min);
+            return cmp==0 ? (cmpr.prefix ? 0:b1.length-len2) : cmp;
         }
         /*
          * insert to the right, ie if key == a branch entry, insert into the next entry's branch
