@@ -7,6 +7,7 @@ import java.nio.ByteOrder;
 import org.srlutils.Rand;
 import org.srlutils.Simple;
 import org.srlutils.TaskTimer;
+import static org.srlutils.Unsafe.uu;
 import org.srlutils.btree.BtTests2;
 import org.srlutils.btree.Butil.Modes;
 
@@ -684,7 +685,6 @@ public abstract class Bminus<KK,VV,CC extends Bminus.Context,PP extends Bminus.P
 
     /** representation of a single page of the tree */
     public static class DirectPage<PP extends DirectPage<PP>> extends BasicPage<PP> {
-        public static sun.misc.Unsafe uu = Simple.Reflect.getUnsafe();
         public long buf;
 
         /** copy or shift the arrays from this[ko:ko+len] to dst[kd,*] */
@@ -847,11 +847,11 @@ public abstract class Bminus<KK,VV,CC extends Bminus.Context,PP extends Bminus.P
         }
         public void dexs(int index,PP p2) {
             int offset = index*size + size - 4;
-            dw.uu.putInt( dw.vo+offset, p2.kpage );
+            uu.putInt( dw.vo+offset, p2.kpage );
         }
         public PP dexs(PP [] pages, int index) {
             int offset = index*size + size - 4;
-            int k2 = dw.uu.getInt(dw.vo+offset);
+            int k2 = uu.getInt(dw.vo+offset);
             return pages[k2];
         }
         public int delete(int ko) { return 0; }
@@ -1011,7 +1011,7 @@ public abstract class Bminus<KK,VV,CC extends Bminus.Context,PP extends Bminus.P
         public Page newPage(boolean leaf) {
             Page p2 = new Page();
             p2.size = leaf ? 12 : 12;
-            p2.buf = Page.uu.allocateMemory( cap*p2.size );
+            p2.buf = uu.allocateMemory( cap*p2.size );
             return p2;
         }
         public int compare(Page page,int index,Data data) {
@@ -1022,7 +1022,7 @@ public abstract class Bminus<KK,VV,CC extends Bminus.Context,PP extends Bminus.P
         public Data context(Double key,Float val) { return new Data().set(key,val==null ? 0 : val); }
         public void clear() {
             for (int ii = 0; ii < knext; ii++)
-                Page.uu.freeMemory( pages[ii].buf );
+                uu.freeMemory( pages[ii].buf );
         }
     }
     

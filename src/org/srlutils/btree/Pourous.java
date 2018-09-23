@@ -7,6 +7,7 @@ import org.srlutils.Rand;
 import org.srlutils.Simple;
 import static org.srlutils.Simple.Exceptions.rte;
 import org.srlutils.TaskTimer;
+import static org.srlutils.Unsafe.uu;
 import org.srlutils.Util;
 
 
@@ -54,7 +55,6 @@ public class Pourous {
     //  direct worker was redundant, same as SubWorker but not as general
 
     public static abstract class SubWorker extends Worker {
-        public static sun.misc.Unsafe uu = Simple.Reflect.getUnsafe();
         int next = 0;
         int [] no;
         int esize = 8;
@@ -949,7 +949,7 @@ class Sorted {
         public long keys;
         public int num;
         public D(int cap) {
-            keys = Pourous.SubWorker.uu.allocateMemory( cap*esize );
+            keys = uu.allocateMemory( cap*esize );
         }
         public void clear() { num = 0; }
         boolean gt(int k1,double key) { return get(k1) > key; }
@@ -967,17 +967,17 @@ class Sorted {
             return -1;
         }
         public double get(int index) {
-            return Pourous.SubWorker.uu.getDouble( keys+index*esize );
+            return uu.getDouble( keys+index*esize );
         }
         public void set(int index,double key) {
-            Pourous.SubWorker.uu.putDouble( keys+index*esize, key );
+            uu.putDouble( keys+index*esize, key );
         }
         public void insert(double key) {
             int k1 = 0;
             for (int ii = 0; ii < num && !gt(ii,key); ii += step) k1 = ii;
             while (k1 < num && !gt(k1,key)) k1++;
             long pos = keys + k1*esize;
-            Pourous.SubWorker.uu.copyMemory( pos, pos+esize, (num-k1)*esize );
+            uu.copyMemory( pos, pos+esize, (num-k1)*esize );
             set(k1,key);
             num++;
         }

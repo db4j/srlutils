@@ -5,6 +5,7 @@ package org.srlutils.btree;
 import java.lang.reflect.Field;
 import org.srlutils.Simple;
 import org.srlutils.Types;
+import static org.srlutils.Unsafe.uu;
 import static org.srlutils.btree.Btree.extraChecks;
 
 public class Bpage {
@@ -36,7 +37,6 @@ public class Bpage {
     }
     /** implementation of a single page using direct memory and unsafe access for speed */
     public static class Sheet extends Page<Sheet> implements org.srlutils.Callbacks.Cleanable {
-        public static final sun.misc.Unsafe uu = Simple.Reflect.getUnsafe();
         public byte [] buf;
         public int jar,bs,del;
         int pdex;

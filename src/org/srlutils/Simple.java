@@ -180,9 +180,6 @@ public class Simple {
             }
             // public Method getDeclaredMethod(String name, Class<?>... parameterTypes) throws NoSuchMethodException, SecurityException
         }
-        public static sun.misc.Unsafe getUnsafe() {
-            return (sun.misc.Unsafe) getField( sun.misc.Unsafe.class, "theUnsafe" );
-        }
         public static Field field(Class klass,String name) {
             try { return klass.getDeclaredField(name); }
             catch (Exception e) { return null; }
