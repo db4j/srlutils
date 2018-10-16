@@ -3,8 +3,6 @@
 package org.srlutils.btree;
 
 import java.util.ArrayList;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import org.srlutils.DynArray;
 import org.srlutils.Rand;
 import org.srlutils.Simple;
@@ -13,6 +11,8 @@ import org.srlutils.Types;
 import org.srlutils.btree.Butil.Modes;
 import org.srlutils.btree.Bpage.Page;
 import org.srlutils.btree.Bpage.Sheet;
+import org.srlutils.btree.Butil.Consumer;
+import org.srlutils.btree.Butil.Function;
 
 
 /*
@@ -938,8 +938,6 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
         path.ko = page.num;
         return path;
     }
-
-    
 
     protected void  prepx(PP page,CC context,int ko) {}
     protected void getccx(PP page,CC context,int ko) { getcc(page,context,ko); }

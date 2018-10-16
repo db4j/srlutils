@@ -46,4 +46,8 @@ public class Butil {
         public static int mapEq(boolean greater,int cmp) { return (cmp==0 && greater) ? 1 : cmp; }
         public boolean eq(int mode) { return mode==eq; }
     }
+
+    // java 7 friendly duplicates of the java 8 features, to allow db4j-srlutils parity
+    public interface Consumer<TT> { void accept(TT val); }
+    public interface Function<TT,VV> { VV apply(TT t); }
 }
