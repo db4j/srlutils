@@ -2,6 +2,9 @@
 
 package org.srlutils.btree;
 
+import java.util.ArrayList;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import org.srlutils.DynArray;
 import org.srlutils.Rand;
 import org.srlutils.Simple;
@@ -319,7 +322,6 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
         context.mode = modes.gt;
         Path<PP> path = findPath(context,false);
         insertPath(path,context);
-//        insert(path.page,context,path.ko);
     }
     int bisectFixed(Path<PP> path,PP page1) {
         int num = (path.page.num+1)/2;
@@ -331,7 +333,24 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
     }
     /** split and update path and insert left and right (if non-null) else context, returning the new page */
     PP splitPage(Path<PP> path,CC context,PP left,PP right) {
-        return null; // must be overrided
+        PP    page0       = path.page;
+        PP          page1 = createPage(right==null,context);
+        int ksplit = bisectFixed(path,page1);
+        
+        // fixme - greenfield, known bad, unused:
+        //   need to adjust parent offset, but doing that would mess up setchilds
+        //   why does setchilds write both indexes ???
+        if (false & path.page==page1) {
+            if (path.prev != null)
+                path.prev.ko++;
+        }
+        
+        split(page0,page1,ksplit);
+        if (right==null)
+            insert(path.page,context,path.ko);
+        else
+            setchilds(path.page,path.ko,left,right,context);
+        return page1;
     }
     /** traverse path, splitting each page if needed and insert the key/value pair in context */
     protected void insertPath(Path<PP> path,CC context) {
@@ -340,9 +359,15 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
                 left=page0, right=page1, path=path.prev) {
             page1 = splitPage(path,context,left,right);
         }
+        if (left != null) updateRight(path);
         if      (path  == null) setroot  (                  left,right,context);
         else if (right != null) setchilds(path.page,path.ko,left,right,context);
         else insert(path.page,context,path.ko);
+    }
+    static void updateRight(Path path) {
+        // could minimally update, but it's safe and easy to brute force disable
+        for (Path po = path; po != null; po = po.prev)
+            po.right = false;
     }
     /** create a new root node and set left and right as children */
     private void setroot(PP left,PP right,CC context) {
@@ -377,11 +402,16 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
         checkDel(page,false);
     }
     /** delete the first element equal to context.key */
-    public void remove(CC context) {
+    public CC remove(CC context) {
         context.mode = modes.eq;
         Path<PP> path = findPath(context,true);
         if (context.match) 
             remove(path,context,path.right);
+        return context;
+    }
+    public CC update(CC context) {
+        Path<PP> path = findPath(context,false);
+        return context.match ? update(path,context):context;
     }
     int delete(PP page,int index) {
         prep(page);
@@ -391,12 +421,12 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
      * @param path the location of the element to remove
      * @param context the context
      */
-    public void remove(Path<PP> path,CC context) { remove(path,context,false); }
+    public CC remove(Path<PP> path,CC context) { return remove(path,context,false); }
     /** 
      *  remove the element described by path and rebalance the tree
      *  right means that the element is the last element in the tree, ie furthest-right
      */
-    protected void remove(Path<PP> path,CC context,boolean right) {
+    protected CC remove(Path<PP> path,CC context,boolean right) {
         PP page = path.page;
         int size = size(page,null,null,true,null,0);
         if (!right) cleanDups(path,context);
@@ -407,6 +437,14 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
 //        System.out.format( "Btree.remove -- page:%5d num:%5d, %5d %5d %5d\n", page.kpage, page.num, size, s2, so );
         if (page.num==0 || s2 < so && size >= so)
             combine( path, context );
+        return context;
+    }
+    public CC update(Path<PP> path,CC context) {
+        // simple case ... val sizes are fixed, so just update the value
+        int cmp = compare(path.page,path.ko,context);
+        Simple.softAssert(cmp==0,"updating a value requires the key is unchanged");
+        setccx(path.page,context,path.ko);
+        return context;
     }
     /** 
      * if we've removed the last element in the page and it's a duplicate
@@ -514,9 +552,14 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
         // fixme:encapsulation - btree subclasses could need access to private members
         //                       use static protected methods
         Path() {}
+        // fixme - prev is the link to the parent level, ie they move vertically
+        // but this creates confusion as the path also has operations prev() and next() that
+        // move horizontally, and these are part of the public api
+        // should probably rename prev, perhaps to "link"
         Path<PP> prev;
         PP page;
         int ko;
+        /** true means the page is known to be the rightmost page in the tree, false means nothing */
         boolean right;
         public OpaquePage<PP> getPage() {
             OpaquePage<PP> op = new OpaquePage<>();
@@ -575,6 +618,11 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
         if (path.ko >= path.page.num) return nextPage(path, context);
         return path;
     }
+    public Path<PP> prev(Path<PP> path,CC context) {
+        path.ko--;
+        if (path.ko < 0) return prevPage(path, context);
+        return path;
+    }
 
     public void getPath(Path<PP> path,CC context) {
         context.match = true;
@@ -590,17 +638,53 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
     
     protected boolean isToast(CC context) { return false; }
     void toastPage(Path<PP> path,CC context) {}
+    public void slurp(Path<PP> p1,Path<PP> p2,CC context) {}
     
     public static class Range<CC extends Btree.Context> {
         // from c1 to c2 (exclussive)
-        Path p1, p2;
+        Path p1, p2, px;
         public CC cc;
-        boolean first = true, preinit = true;
+        boolean first = true, preinit = true, init = true;
         Btree btree;
-        public Range(Btree $btree) { btree = $btree; }
+        public Range(Btree<CC,?> $btree) { btree = $btree; }
         public Range set(Path $c1,Path $c2,CC $cc) { p1=$c1; p2=$c2; cc=$cc; return this; }
+
+        // fixme - should really verify that the path matches the key before modifying the leaf
+        public CC update() { if (cc.match) btree.update(px,cc); return cc; }
+        public CC remove() { if (cc.match) btree.remove(px,cc); return cc; }
+        public CC insert() {
+            btree.insertPath(px,cc);
+            return cc;
+        }
+        public CC upsert() {
+            if (cc.match)
+                btree.update(px,cc);
+            else
+                btree.insertPath(px,cc);
+            return cc;
+        }
         
+        public <TT> ArrayList<TT> getall(Function<CC,TT> map) {
+            ArrayList vals = new ArrayList();
+            btree.slurp(p1,p2,cc);
+            while (next()) vals.add(map.apply(cc));
+            return vals;
+        }
+        public void visit(Consumer<CC> consumer) {
+            btree.slurp(p1,p2,cc);
+            while (next()) consumer.accept(cc);
+        }
+        public Range<CC> first(Function<CC,Boolean> filter) {
+            while (next())
+                if (filter.apply(cc)) break;
+            return this;
+        }
+        public Range<CC> set(Consumer<CC> setter) {
+            setter.accept(cc);
+            return this;
+        }
         public int count() {
+            btree.slurp(p1,p2,cc);
             if (p2 != null && p1.page.kpage==p2.page.kpage) return p2.ko - p1.ko;
             int cnt = p1.page.num - p1.ko;
             Path po = p1.dup();
@@ -612,19 +696,38 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
                 Simple.softAssert(false);
             return cnt;
         }
-        public CC refresh() { btree.getcc(p1.page,cc,p1.ko); return cc; }
+        // fixme::broken - px never gets set, replace with next() ???
+        public CC refresh() { btree.getccx(p1.page,cc,p1.ko); return cc; }
         public boolean valid() { return p1 != null && (p2==null || !p1.same(p2)); }
         public boolean init() {
             boolean valid = valid();
             if (valid) refresh();
-            return valid;
+            return cc.match = valid;
+        }
+        Path wrap(Path orig,Path path) {
+            return path==null ? orig:path;
+        }
+        boolean invalid(Path path) {
+            return path==null || path.ko < 0 | path.ko >= path.page.num;
         }
         public boolean hasnext() {
-            if (!first) p1 = btree.next(p1,cc);
+            if (init)        px = p1.dup();
+            else if (!first) px = wrap(px,btree.next(px,cc));
             first = true;
-            boolean valid = p1 != null && (p2==null || !p1.same(p2));
-            return valid;
+            init = false;
+            boolean valid = !invalid(px) && (p2==null || !px.same(p2));
+            return cc.match = valid;
         }
+        public boolean hasprev() {
+            if (init)          px = p2.dup();
+            boolean same = p1.same(px);
+            if (init | !first) px = wrap(px,btree.prev(px,cc));
+            first = true;
+            init = false;
+            boolean valid = !invalid(px) && (p1==null || !same);
+            return cc.match = valid;
+        }
+        // fixme - add gonext(), goprev() that move px but don't retrieve values; fix refresh()
         /**
          * make the next element in the range current and store the key/value pair in context
          * @return true if the element is valid
@@ -632,7 +735,23 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
         public boolean next() {
             boolean valid = hasnext();
             first = false;
-            if (valid) btree.getccx(p1.page,cc,p1.ko);
+            if (valid) btree.getccx(px.page,cc,px.ko);
+            return valid;
+        }
+        public boolean prev() {
+            boolean valid = hasprev();
+            first = false;
+            if (valid) btree.getccx(px.page,cc,px.ko);
+            return valid;
+        }
+        public boolean gonext() {
+            boolean valid = hasnext();
+            first = false;
+            return valid;
+        }
+        public boolean goprev() {
+            boolean valid = hasprev();
+            first = false;
             return valid;
         }
         /**
@@ -641,11 +760,11 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
          * @return true if the element is valid
          */
         public boolean nextGreedy() {
-            Page po = p1.page;
+            Page page = px.page;
             boolean valid = hasnext();
-            if (valid && (preinit | po != p1.page)) btree.toastPage(p1,cc);
+            if (valid && (preinit | page != px.page)) btree.toastPage(px,cc);
             first = preinit = false;
-            if (valid) btree.getccx(p1.page,cc,p1.ko);
+            if (valid) btree.getccx(px.page,cc,px.ko);
             return valid;
         }
     }
@@ -702,6 +821,33 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
             Path tmp = path;
             path = new Path();
             path.set(tmp,page,0);
+        }
+        return path;
+    }
+    Path<PP> prevPage(Path<PP> path,CC context) {
+        Path<PP> prev = path.prev;
+        if (prev==null) return null;
+        if (prev.ko > 0) {
+            prev.ko--;
+            PP page = dexs(prev.page,prev.ko,true,context);
+            path.page = page;
+            path.ko = page.num-1;
+            return path;
+        }
+        int level = context.depth;
+        while (true) {
+            path = path.prev;
+            level--;
+            if (path==null) return null;
+            path.ko--;
+            if (path.ko >= 0) break;
+        }
+        while (level < context.depth) {
+            PP page = dexs(path.page,path.ko,level+1==context.depth,context);
+            level++;
+            Path tmp = path;
+            path = new Path();
+            path.set(tmp,page,page.num-1);
         }
         return path;
     }
@@ -945,8 +1091,8 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
         }
         public int [] getInfo() { return new int[] {depth, pages.size-kdels.size, zeroMerge}; }
     }
-    /** return an array of depth and number of pages */
-    public int [] getInfo() { return null; }
+    /** optional method, return an array of depth, number of pages, and zero merges */
+    public int [] getInfo() { return new int[] {-1,-1,-1}; }
     protected String info() {
         int [] info = getInfo();
         return String.format("Btree depth:%d, pages:%d\n", info[0], info[1]);

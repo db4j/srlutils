@@ -18,7 +18,7 @@ public interface Bface<CC extends Btree.Context> {
     void insert(CC context);
 
     /** delete the first element equal to context.key */
-    void remove(CC context);
+    CC remove(CC context);
 
     /** read the state variables - potentially expensive */
     void init(CC cc);

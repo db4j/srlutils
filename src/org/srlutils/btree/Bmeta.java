@@ -3,6 +3,8 @@
 package org.srlutils.btree;
 
 import java.util.ArrayList;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import org.srlutils.Simple;
 import org.srlutils.btree.TestDF.DFcontext;
 import org.srlutils.btree.Bpage.Sheet;
@@ -289,10 +291,44 @@ public abstract class Bmeta<CC extends Bmeta.Context<KK,VV,CC>,KK,VV,EE extends 
         insert(context);
         return context;
     }
+    public CC remove(KK key) {
+        CC context = context().set(key,null);
+        remove(context);
+        return context;
+    }
+    public CC update(KK key,VV val) {
+        CC context = context().set(key,val);
+        return update(context);
+    }
+    public CC update(KK key,Consumer<VV> editor) {
+        return findPrefix(key).first(cc -> true).set(cc -> editor.accept(cc.val)).update();
+    }
+    public CC update(KK key,Function<CC,Boolean> filter,Consumer<VV> editor) {
+        return findPrefix(key).first(filter).set(cc -> editor.accept(cc.val)).update();
+    }
+    public CC update(KK key,Function<CC,Boolean> filter,VV val) {
+        return findPrefix(key).first(filter).set(cc -> cc.val=val).update();
+    }
+    // fixme - add upsert and preserve paths during splits and merges
     public final void insert(CC context) {
         if (keys.dynlen | vals.dynlen)       insert2(context);
         else                           super.insert (context);
     }
+    public CC update(Path<Sheet> path,CC context) {
+        if (!keys.dynlen & !vals.dynlen)
+            return super.update(path,context);
+        int cmp = compare(path.page,path.ko,context);
+        Simple.softAssert(cmp==0,"updating a value requires the key is unchanged");
+
+        // fixme:speed - apply the delta instead of traversing the path
+        // fixme:api - update the path (and range paths) during structural modification
+        // fixme:speed - compare the old and new sizes vs the space in the page and add directly
+
+        remove(path,context,path.right);
+        insert(context);
+        return context;
+    }
+    protected void free(Sheet page) {}
     int delete(Sheet page,int index) {
         prep(page);
         // copy the lower jar into the gap
@@ -358,11 +394,16 @@ public abstract class Bmeta<CC extends Bmeta.Context<KK,VV,CC>,KK,VV,EE extends 
         return (Range) findPrefix(context().set(key, null));
     }
 
+    public ArrayList<Pair<KK,VV>> getall() {
+        return getall(cc -> new Pair<>(cc.key,cc.val));
+    }
+
     public Range getall(CC context) { return (Range) super.getall(context); }
     public Range getall() { return (Range) super.getall(context()); }
     
     protected Range range() { return new Range(); }
 
+    void toastPage(Path<Sheet> path,CC context) {}
 
 
 
