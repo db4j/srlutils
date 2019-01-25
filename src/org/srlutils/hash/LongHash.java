@@ -161,7 +161,7 @@ public class LongHash {
         void copy(int found,int i2) {}
         void clear(int found) {}
         /** return the index or insertion point (ie, -index-1, ie strictly negative) for key */
-        final int at(long key) {
+        protected final int at(long key) {
             int index = index(key);
             if (key==magic)
                 key = anti;

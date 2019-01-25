@@ -1029,7 +1029,7 @@ public abstract class Btree<CC extends Btree.Context,PP extends Page<PP>>
     protected void free(PP page) {}
 
     
-    static abstract class DirectMap<CC extends Context>
+    public static abstract class DirectMap<CC extends Context>
         extends Btree<CC,Sheet> {
         /** the root page */
         protected Sheet rootz;
